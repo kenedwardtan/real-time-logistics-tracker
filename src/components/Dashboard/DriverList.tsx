@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/lib/store";
 import { setSelectedDriver } from "@/lib/store/slices/driversSlice";
@@ -83,11 +83,32 @@ function DriverCard({
         {driver.vehicleInfo.make} {driver.vehicleInfo.model}
       </div>
 
-      {driver.currentDelivery && (
-        <div className="mt-2 text-xs text-blue-600">
-          On delivery: {driver.currentDelivery.status}
-        </div>
-      )}
+      {/* Delivery Status Badge */}
+      <div className="mt-2 flex items-center justify-between">
+        <span
+          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
+            driver.deliveryStatus === "delivering"
+              ? "bg-blue-100 text-blue-800"
+              : driver.deliveryStatus === "paused"
+              ? "bg-yellow-100 text-yellow-800"
+              : "bg-gray-100 text-gray-800"
+          }`}
+        >
+          {driver.deliveryStatus.charAt(0).toUpperCase() +
+            driver.deliveryStatus.slice(1)}
+        </span>
+
+        {driver.estimatedTimeArrival &&
+          driver.deliveryStatus === "delivering" && (
+            <span className="text-xs text-green-600 font-medium">
+              ETA:{" "}
+              {new Date(driver.estimatedTimeArrival).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+          )}
+      </div>
     </div>
   );
 }
@@ -98,6 +119,45 @@ export function DriverList() {
     (state: RootState) => state.drivers.selectedDriver
   );
   const loading = useSelector((state: RootState) => state.drivers.loading);
+
+  // Filter state for PDF requirement: "Allow filtering or sorting of drivers based on their delivery status"
+  const [deliveryStatusFilter, setDeliveryStatusFilter] = useState<
+    "all" | "idle" | "delivering" | "paused"
+  >("all");
+  const [sortBy, setSortBy] = useState<"name" | "status" | "lastUpdated">(
+    "name"
+  );
+
+  // Filter and sort drivers
+  const filteredAndSortedDrivers = React.useMemo(() => {
+    let filtered = drivers;
+
+    // Filter by delivery status
+    if (deliveryStatusFilter !== "all") {
+      filtered = drivers.filter(
+        (driver) => driver.deliveryStatus === deliveryStatusFilter
+      );
+    }
+
+    // Sort drivers
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case "name":
+          return a.name.localeCompare(b.name);
+        case "status":
+          return a.status.localeCompare(b.status);
+        case "lastUpdated":
+          return (
+            new Date(b.lastUpdated).getTime() -
+            new Date(a.lastUpdated).getTime()
+          );
+        default:
+          return 0;
+      }
+    });
+
+    return sorted;
+  }, [drivers, deliveryStatusFilter, sortBy]);
 
   if (loading) {
     return (
@@ -120,14 +180,58 @@ export function DriverList() {
   }
 
   return (
-    <div className="overflow-y-auto">
-      {drivers.map((driver) => (
-        <DriverCard
-          key={driver.id}
-          driver={driver}
-          isSelected={selectedDriver?.id === driver.id}
-        />
-      ))}
+    <div className="flex flex-col h-full">
+      {/* Filter and Sort Controls */}
+      <div className="p-3 border-b border-gray-200 bg-gray-50">
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">
+              Delivery Status
+            </label>
+            <select
+              value={deliveryStatusFilter}
+              onChange={(e) => setDeliveryStatusFilter(e.target.value as any)}
+              className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="all">All Statuses</option>
+              <option value="idle">Idle</option>
+              <option value="delivering">Delivering</option>
+              <option value="paused">Paused</option>
+            </select>
+          </div>
+          <div>
+            <label className="text-xs font-medium text-gray-600 mb-1 block">
+              Sort By
+            </label>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as any)}
+              className="w-full text-xs border border-gray-300 rounded px-2 py-1"
+            >
+              <option value="name">Name</option>
+              <option value="status">Status</option>
+              <option value="lastUpdated">Last Updated</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Driver List */}
+      <div className="flex-1 overflow-y-auto">
+        {filteredAndSortedDrivers.length === 0 ? (
+          <div className="p-4 text-center text-gray-500">
+            <p>No drivers match the selected filter</p>
+          </div>
+        ) : (
+          filteredAndSortedDrivers.map((driver) => (
+            <DriverCard
+              key={driver.id}
+              driver={driver}
+              isSelected={selectedDriver?.id === driver.id}
+            />
+          ))
+        )}
+      </div>
     </div>
   );
 }

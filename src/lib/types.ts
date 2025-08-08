@@ -2,6 +2,7 @@ export interface Driver {
   id: string;
   name: string;
   status: "online" | "offline" | "busy";
+  deliveryStatus: "idle" | "delivering" | "paused"; // PDF requirement
   currentLocation: {
     lat: number;
     lng: number;
@@ -13,12 +14,19 @@ export interface Driver {
     plateNumber: string;
   };
   currentDelivery?: Delivery;
+  estimatedTimeArrival?: string; // ETA to current destination
 }
 
 export interface Delivery {
   id: string;
-  driverId: string;
-  status: "pending" | "in-progress" | "completed" | "cancelled";
+  driverId?: string; // Optional - unassigned deliveries
+  status:
+    | "pending"
+    | "assigned"
+    | "picked-up"
+    | "delivering"
+    | "completed"
+    | "cancelled";
   pickupLocation: {
     address: string;
     lat: number;
@@ -37,6 +45,7 @@ export interface Delivery {
   estimatedDeliveryTime: string; // ISO string instead of Date
   actualPickupTime?: string; // ISO string instead of Date
   actualDeliveryTime?: string; // ISO string instead of Date
+  estimatedTimeArrival?: string; // ETA for current location
   notes?: string;
 }
 

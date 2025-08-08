@@ -3,7 +3,11 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/lib/store";
-import { fetchDrivers } from "@/lib/store/slices/driversSlice";
+import {
+  fetchDrivers,
+  startDriverMovementSimulation,
+  setSelectedDriver,
+} from "@/lib/store/slices/driversSlice";
 import { Driver } from "@/lib/types";
 import dynamic from "next/dynamic";
 
@@ -51,13 +55,21 @@ const createCustomIcon = (status: string) => {
 
 // Component to handle map updates when drivers change
 function MapUpdater() {
-  return null; // Simplified for now - map will center based on initial drivers
+  const selectedDriver = useSelector(
+    (state: RootState) => state.drivers.selectedDriver
+  );
+
+  // We'll use a ref to store the map instance from the parent
+  return null;
 }
 
 // Individual driver marker component
 function DriverMarker({ driver }: { driver: Driver }) {
+  const dispatch = useDispatch<AppDispatch>();
+
   const handleMarkerClick = () => {
     console.log("Selected driver:", driver.name);
+    dispatch(setSelectedDriver(driver));
   };
 
   const customIcon = createCustomIcon(driver.status);
@@ -92,9 +104,13 @@ function DriverMarker({ driver }: { driver: Driver }) {
 export function LiveMap() {
   const dispatch = useDispatch<AppDispatch>();
   const drivers = useSelector((state: RootState) => state.drivers.drivers);
+  const selectedDriver = useSelector(
+    (state: RootState) => state.drivers.selectedDriver
+  );
   const loading = useSelector((state: RootState) => state.drivers.loading);
   const error = useSelector((state: RootState) => state.drivers.error);
   const [isClient, setIsClient] = useState(false);
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -119,7 +135,26 @@ export function LiveMap() {
       });
     }
     dispatch(fetchDrivers());
+
+    // Start driver movement simulation after a short delay
+    setTimeout(() => {
+      dispatch(startDriverMovementSimulation());
+    }, 2000);
   }, [dispatch]);
+
+  // Center map on selected driver
+  useEffect(() => {
+    if (mapInstance && selectedDriver) {
+      mapInstance.flyTo(
+        [
+          selectedDriver.currentLocation.lat,
+          selectedDriver.currentLocation.lng,
+        ],
+        12,
+        { duration: 1.5 }
+      );
+    }
+  }, [mapInstance, selectedDriver]);
 
   if (!isClient || loading) {
     return (
@@ -151,6 +186,7 @@ export function LiveMap() {
         zoom={8}
         className="h-full w-full"
         style={{ height: "100%", width: "100%" }}
+        ref={setMapInstance}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
