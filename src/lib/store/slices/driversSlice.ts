@@ -8,23 +8,23 @@ const mockDrivers: Driver[] = [
     name: "Tony Stark",
     status: "online",
     currentLocation: { lat: 45.4215, lng: -75.6972 }, // Parliament Hill, Ottawa
-    lastUpdated: new Date(),
+    lastUpdated: new Date().toISOString(),
     vehicleInfo: { make: "Audi", model: "R8", plateNumber: "IRON-1" },
   },
   {
     id: "2",
     name: "Black Widow",
     status: "busy",
-    currentLocation: { lat: 43.6532, lng: -79.3832 }, // CN Tower, Toronto
-    lastUpdated: new Date(Date.now() - 30000), // 30 seconds ago
+    currentLocation: { lat: 45.4048, lng: -75.7146 }, // Kanata, Ottawa
+    lastUpdated: new Date(Date.now() - 30000).toISOString(), // 30 seconds ago
     vehicleInfo: { make: "BMW", model: "X5", plateNumber: "WIDOW-2" },
   },
   {
     id: "3",
     name: "Captain America",
     status: "offline",
-    currentLocation: { lat: 45.4215, lng: -75.6972 }, // Rideau Centre, Ottawa
-    lastUpdated: new Date(Date.now() - 300000), // 5 minutes ago
+    currentLocation: { lat: 45.3876, lng: -75.696 }, // Airport area, Ottawa
+    lastUpdated: new Date(Date.now() - 300000).toISOString(), // 5 minutes ago
     vehicleInfo: {
       make: "Harley",
       model: "Street Glide",
@@ -120,7 +120,7 @@ const driversSlice = createSlice({
         const driver = state.drivers.find((d) => d.id === driverId);
         if (driver) {
           driver.currentLocation = location;
-          driver.lastUpdated = new Date();
+          driver.lastUpdated = new Date().toISOString();
         }
       });
   },

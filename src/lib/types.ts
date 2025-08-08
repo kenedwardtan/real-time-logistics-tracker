@@ -6,7 +6,7 @@ export interface Driver {
     lat: number;
     lng: number;
   };
-  lastUpdated: Date;
+  lastUpdated: string; // ISO string instead of Date for Redux serialization
   vehicleInfo: {
     make: string;
     model: string;
@@ -33,18 +33,44 @@ export interface Delivery {
     name: string;
     phone: string;
   };
-  estimatedPickupTime: Date;
-  estimatedDeliveryTime: Date;
-  actualPickupTime?: Date;
-  actualDeliveryTime?: Date;
+  estimatedPickupTime: string; // ISO string instead of Date
+  estimatedDeliveryTime: string; // ISO string instead of Date
+  actualPickupTime?: string; // ISO string instead of Date
+  actualDeliveryTime?: string; // ISO string instead of Date
   notes?: string;
 }
 
-export interface WebSocketMessage {
-  type: "driver_update" | "delivery_update" | "status_change";
-  payload: Driver | Delivery | { driverId: string; status: Driver["status"] };
-  timestamp: Date;
+export interface DriverUpdatePayload {
+  driverId: string;
+  updates: Partial<Driver>;
 }
+
+export interface DeliveryUpdatePayload {
+  deliveryId: string;
+  updates: Partial<Delivery>;
+}
+
+export interface StatusChangePayload {
+  driverId: string;
+  status: Driver["status"];
+}
+
+export type WebSocketMessage =
+  | {
+      type: "driver_update";
+      payload: DriverUpdatePayload;
+      timestamp: string;
+    }
+  | {
+      type: "delivery_update";
+      payload: DeliveryUpdatePayload;
+      timestamp: string;
+    }
+  | {
+      type: "status_change";
+      payload: StatusChangePayload;
+      timestamp: string;
+    };
 
 export interface OptimisticUpdate {
   id: string;
@@ -52,5 +78,5 @@ export interface OptimisticUpdate {
     type: string;
     payload: Driver | Delivery | { driverId: string; updates: Partial<Driver> };
   };
-  timestamp: Date;
+  timestamp: string; // ISO string instead of Date
 }

@@ -15,12 +15,7 @@ export const store = configureStore({
     [logisticsApi.reducerPath]: logisticsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware({
-      serializableCheck: {
-        ignoredActions: ["drivers/updateDriverLocation"],
-        ignoredPaths: ["drivers.drivers"],
-      },
-    }).concat(logisticsApi.middleware, websocketMiddleware),
+    getDefaultMiddleware().concat(logisticsApi.middleware, websocketMiddleware),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

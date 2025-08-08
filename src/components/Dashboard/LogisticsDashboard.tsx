@@ -1,11 +1,13 @@
 "use client";
 
+import { LiveMap } from "../Map/LiveMap";
+
 export function LogisticsDashboard() {
   return (
     <div className="flex h-screen">
       <div className="w-80 bg-white border-r border-gray-200">
         <div className="p-4">
-          <h1 className="text-xl font-semibold text-gray-900">
+          <h1 className="text-xl font-semibold text-blue-600">
             Logistics Tracker
           </h1>
         </div>
@@ -15,9 +17,7 @@ export function LogisticsDashboard() {
       </div>
 
       <div className="flex-1 bg-gray-100">
-        <div className="h-full flex items-center justify-center">
-          <p className="text-gray-500"> mapp </p>
-        </div>
+        <LiveMap />
       </div>
     </div>
   );

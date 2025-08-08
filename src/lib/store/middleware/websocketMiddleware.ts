@@ -1,4 +1,4 @@
-import { Middleware } from "@reduxjs/toolkit";
+import { Middleware, AnyAction } from "@reduxjs/toolkit";
 import { updateDriver } from "../slices/driversSlice";
 import { updateDelivery } from "../slices/deliveriesSlice";
 import { WebSocketMessage } from "@/lib/types";
@@ -7,7 +7,7 @@ let ws: WebSocket | null = null;
 
 export const websocketMiddleware: Middleware =
   (store) => (next) => (action) => {
-    if (action.type === "websocket/connect") {
+    if ((action as AnyAction).type === "websocket/connect") {
       if (ws) {
         ws.close();
       }
@@ -34,7 +34,7 @@ export const websocketMiddleware: Middleware =
       };
     }
 
-    if (action.type === "websocket/disconnect") {
+    if ((action as AnyAction).type === "websocket/disconnect") {
       if (ws) {
         ws.close();
         ws = null;
@@ -62,7 +62,16 @@ function handleWebSocketMessage(store: any, message: WebSocketMessage) {
         })
       );
       break;
+    case "status_change":
+      store.dispatch(
+        updateDriver({
+          driverId: message.payload.driverId,
+          updates: { status: message.payload.status },
+        })
+      );
+      break;
     default:
-      console.warn("Unknown message type:", message.type);
+      const exhaustiveCheck: never = message;
+      console.warn("Unknown message type:", exhaustiveCheck);
   }
 }
