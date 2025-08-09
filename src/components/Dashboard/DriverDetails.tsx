@@ -8,10 +8,22 @@ export function DriverDetails() {
   const selectedDriver = useSelector(
     (state: RootState) => state.drivers.selectedDriver
   );
+  const deliveries = useSelector(
+    (state: RootState) => state.deliveries.deliveries
+  );
 
   if (!selectedDriver) {
     return null;
   }
+
+  // Find current delivery for this driver
+  const currentDelivery = deliveries.find(
+    (d) =>
+      d.driverId === selectedDriver.id &&
+      (d.status === "assigned" ||
+        d.status === "picked-up" ||
+        d.status === "delivering")
+  );
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -82,6 +94,42 @@ export function DriverDetails() {
               {new Date(selectedDriver.lastUpdated).toLocaleString()}
             </p>
           </div>
+
+          {/* Current Delivery Information */}
+          {currentDelivery && (
+            <div>
+              <label className="text-sm font-medium text-gray-600">
+                Current Delivery
+              </label>
+              <div className="bg-blue-50 p-3 rounded mt-1">
+                <p className="font-medium text-sm text-blue-900">
+                  {currentDelivery.customerInfo.name}
+                </p>
+                <p className="text-xs text-blue-700 mt-1">
+                  From: {currentDelivery.pickupLocation.address}
+                </p>
+                <p className="text-xs text-blue-700">
+                  To: {currentDelivery.dropoffLocation.address}
+                </p>
+                <p className="text-xs text-blue-600 mt-2">
+                  Status:{" "}
+                  {currentDelivery.status.charAt(0).toUpperCase() +
+                    currentDelivery.status.slice(1)}
+                </p>
+                {selectedDriver.estimatedTimeArrival && (
+                  <p className="text-xs text-green-600 font-medium mt-1">
+                    ETA:{" "}
+                    {new Date(
+                      selectedDriver.estimatedTimeArrival
+                    ).toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
